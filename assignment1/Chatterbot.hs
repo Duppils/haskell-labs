@@ -4,6 +4,7 @@ import System.Random
 import Data.Char
 import Data.Maybe
 
+
 chatterbot :: String -> [(String, [String])] -> IO ()
 chatterbot botName botRules = do
     putStrLn ("\n\nHi! I am " ++ botName ++ ". How are you?")
@@ -27,16 +28,17 @@ type BotBrain = [(Phrase, [Phrase])]
 --------------------------------------------------------
 
 stateOfMind :: BotBrain -> IO (Phrase -> Phrase)
-{- TO BE WRITTEN -}
-stateOfMind _ = return id
+stateOfMind brain = do
+    r <- randomIO :: IO Float
+    return $ rulesApply (map (map2 (id, pick r)) brain)
 
 rulesApply :: [PhrasePair] -> Phrase -> Phrase
-{- TO BE WRITTEN -}
-rulesApply _ = id
+rulesApply phrases s = maybe [] id $ transformationsApply "*" reflect phrases s 
 
 reflect :: Phrase -> Phrase
-{- TO BE WRITTEN -}
-reflect = id
+reflect [] = []
+reflect (x:xs) = maybe x id (lookup x reflections) : reflect xs
+
 
 reflections =
   [ ("am",     "are"),
@@ -70,9 +72,7 @@ prepare :: String -> Phrase
 prepare = reduce . words . map toLower . filter (not . flip elem ".,:;*!#%&|") 
 
 rulesCompile :: [(String, [String])] -> BotBrain
-{- TO BE WRITTEN -}
-rulesCompile _ = []
-
+rulesCompile list = map (map2 (words . map toLower, map (words . map toLower))) list
 
 --------------------------------------
 
@@ -152,7 +152,7 @@ matchCheck = matchTest == Just testSubstitutions
 
 -- Applying a single pattern
 transformationApply :: Eq a => a -> ([a] -> [a]) -> [a] -> ([a], [a]) -> Maybe [a]
-transformationApply wildcard f s transform = mmap (substitute wildcard (snd transform)) $ match wildcard (fst transform) s
+transformationApply wildcard f s transform = mmap (substitute wildcard (snd transform)) $ mmap f $ match wildcard (fst transform) s
 
 
 -- Applying a list of patterns until one succeeds

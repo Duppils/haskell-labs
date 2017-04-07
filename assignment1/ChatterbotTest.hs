@@ -9,14 +9,16 @@ module Main where
           ~?= ["you", "will", "never", "see", "your", "reflection", "in", "my", "eyes"]
     ]
 
-  transformations = [(words "I hate *", words "Why do you hate * ?")]
+  transformations = [(words "I hate *", words "Why do you hate * ?"), (words "Hello I am *", words "Oh so you are *")]
 
   rulesApplyTest =
     test [
       rulesApply transformations (words "I hate my mother")
         ~?= (words "Why do you hate your mother ?"),
       rulesApply transformations (words "ARGH!")
-        ~?= (words "")
+        ~?= (words ""),
+      rulesApply transformations (words "Hello I am daniel")
+        ~?= (words "Oh so you are daniel")
     ]
     
   reduceTest =
