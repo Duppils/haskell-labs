@@ -16,9 +16,7 @@ module Main where
       rulesApply transformations (words "I hate my mother")
         ~?= (words "Why do you hate your mother ?"),
       rulesApply transformations (words "ARGH!")
-        ~?= (words ""),
-      rulesApply transformations (words "Hello I am daniel")
-        ~?= (words "Oh so you are daniel")
+        ~?= (words "")
     ]
     
   reduceTest =
