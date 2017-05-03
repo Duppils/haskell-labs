@@ -1,6 +1,11 @@
 import Data.List
 
-main = putStrLn "Hello Daniel"
+main = do
+  putStrLn "Enter first string:"
+  string1 <- getLine
+  putStrLn "Enter second string:"
+  string2 <- getLine
+  outputAlignments string1 string2
 
 similarityScore :: String -> String -> Int
 similarityScore xs ys = simLen (length xs) (length ys)
@@ -34,28 +39,31 @@ maximaBy valueFcn xs = filter (\x -> valueFcn (last sortedList) == valueFcn x) s
 type AlignmentType = (String, String)
 
 optAlignments :: String -> String -> [AlignmentType]
-optAlignments xs ys = optAlign (length xs) (length ys)
+optAlignments xs ys = snd $ optAlign (length xs) (length ys)
   where
     optAlign i j = alignTable!!i!!j
     alignTable = [[ alignEntry i j | j<-[0..]] | i<-[0..] ]
 
-    alignEntry :: Int -> Int -> [AlignmentType]
-    alignEntry i 0 = [(drop ((length xs) - i) xs, replicate i '-')]
-    alignEntry 0 j = [(replicate j '-', drop ((length ys) - j) ys)]
+    alignEntry :: Int -> Int -> (Int, [AlignmentType])
+    alignEntry i 0 = (i * scoreSpace, [(drop ((length xs) - i) xs, replicate i '-')])
+    alignEntry 0 j = (j * scoreSpace, [(replicate j '-', drop ((length ys) - j) ys)])
     alignEntry i j
-      | x == y  = attachHeads x y $ optAlign (i-1) (j-1)
-      | otherwise = maximaBy currentSimilarity ((attachHeads '-' y (optAlign i (j-1)))
-                              ++ (attachHeads x '-' (optAlign (i-1) j))
-                              ++ (attachHeads x y (optAlign (i-1) (j-1))))
-      where
-        x = xs!!(length xs - i)
-        y = ys!!(length ys - j)
+      | x == y  = (scoreMatch + fst (optAlign (i-1) (j-1)), attachHeads x y $ snd (optAlign (i-1) (j-1)))
+      | otherwise = (fst $ head alignments, foldr ((++) . snd) [] alignments)
+        where
+          alignments = maximaBy fst
+                          [(scoreSpace + fst (optAlign i (j-1)), attachHeads '-' y (snd (optAlign i (j-1))))
+                          ,(scoreSpace + fst (optAlign (i-1) j), attachHeads x '-' (snd (optAlign (i-1) j)))
+                          ,(scoreMismatch + fst (optAlign (i-1) (j-1)), attachHeads x y (snd (optAlign (i-1) (j-1))))]
 
-currentSimilarity :: AlignmentType -> Int
-currentSimilarity ([],[]) = 0
-currentSimilarity ((x:xs),(y:ys))
-  | match = scoreMatch + currentSimilarity (xs, ys)
-  | space = scoreSpace + currentSimilarity (xs, ys)
-  | otherwise = scoreMismatch + currentSimilarity (xs, ys)
-  where match = x == y
-        space = x == '-' || y == '-'
+          x = xs!!(length xs - i)
+          y = ys!!(length ys - j)
+
+
+outputAlignments :: String -> String -> IO ()
+outputAlignments string1 string2 = do
+  let alignments = optAlignments string1 string2
+  let size = length alignments
+  putStrLn $ "There are " ++ show size ++ " optimal alignments:\n"
+  mapM (\pair -> putStrLn $ (fst pair) ++ "\n" ++ (snd pair) ++ "\n") alignments
+  putStrLn $ "There were " ++ show size ++ " optimal alignments!"
