@@ -5,7 +5,7 @@ import qualified Dictionary
 import Prelude hiding (return, fail)
 newtype T = Program [Statement.T] deriving Show
 instance Parse T where
-  parse = Statement.parse
+  parse = iter Statement.parse >-> (\list -> Program list)
   toString = error "lul"
              
 exec (Program list) = Statement.exec list Dictionary.empty 
