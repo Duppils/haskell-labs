@@ -6,6 +6,7 @@ import Prelude hiding (return, fail)
 newtype T = Program [Statement.T] deriving Show
 instance Parse T where
   parse = iter Statement.parse >-> (\list -> Program list)
-  toString = error "lul"
+  toString (Program list) = concat $ map Statement.toString list
              
+exec :: T -> [Integer] -> [Integer]
 exec (Program list) = Statement.exec list Dictionary.empty 
